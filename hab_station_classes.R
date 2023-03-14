@@ -46,7 +46,25 @@ save(stashap, file = "stations.RData")
 row.names(HABave) = HABave$Station
 #tempmaxmin$Station...368 = NULL
 
+######################################################
+#Map with other regions
+HABregions15 = st_read("HABregions15.shp") %>%
+  st_transform(crs = 4326) %>%
+  st_make_valid()
+#read in shapefile of the delta
+delta = WW_Delta
+load("stations.RData")
 
+ggplot()+  geom_sf(data = delta)+
+  geom_sf(data = HABregions15, aes(fill = Region), alpha = 0.2)+
+  geom_sf(data = Stations, aes(color = Microcystis))+
+  theme_bw() +
+  scale_color_viridis_c(option = "B")+
+  coord_sf(xlim = c(-122.2, -121.2), ylim = c(37.7, 38.6))
+
+Stations2 = st_join(stashap, st_transform(HABregions15, crs = st_crs(stashap)))
+
+###########################################################
 #calculate distance and cluster
 tempdist2 = dist(HABave, "euclidean")
 tempfit2 = hclust(tempdist2, method = "ward.D")
@@ -145,6 +163,7 @@ gp12
 library(gridExtra)
 
 foo = grid.arrange(gp4, gp6, gp12, nrow = 1, ncol = 3)
+
 
 st_write(stashap, "HABstationgroups.shp")
 

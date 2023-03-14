@@ -1,0 +1,345 @@
+---
+title: "Residence time and microcystis"
+author: "Rosie"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Residence time data
+
+```{r, warning=FALSE}
+#Residence time from DSM2 models
+
+library(tidyverse)
+library(lubridate)
+library(sf)
+
+#read in the residence time data
+
+res1 = read_csv("data/EX_2020_locRT.csv") %>%
+  pivot_longer(cols = -SimPeriod, names_to = "Location", values_to = "ResTime") %>%
+  mutate(Date = as.Date(SimPeriod, format = "%d%b%Y"), Region = str_extract(Location, "[A-Z]+" ))
+
+
+ggplot(res1, aes(x = Location, y = ResTime)) + geom_boxplot()+facet_wrap(~Region, scales = "free")
+
+
+```
+
+OK, so most regions all have fairly similar residence times per reach. But let's look at it by WYT just for funsies
+
+```{r}
+Yrs = read_csv("data/yearassignments.csv") %>%
+  select(Year, Yr_type, Index)
+
+#In other circumstances I'd merge these by water years, but the october of a year 
+#after a dry summer is probalby more like September of the same year than it is like February of the
+#next year, so we'll go by calendar year instead.
+
+
+res1 = mutate(res1, Month = month(Date), Year = year(Date)) %>%
+  filter(Region != "SDWS") %>%
+  left_join(Yrs)
+
+ggplot(res1, aes(x = Location, y = ResTime)) + geom_boxplot()+
+  facet_grid(Yr_type~Region, scales = "free")
+```
+OK, now let's calculate averages by region
+
+```{r}
+resave = group_by(res1, SimPeriod, Region, Date, Yr_type, Month, Year, Index) %>%
+  summarize(ResTime = mean(ResTime)) %>%
+  mutate(DOY = yday(Date))
+
+ggplot(resave, aes(x = Month, y = ResTime, color = Yr_type)) + geom_point()+
+  geom_smooth()+
+  facet_wrap(~Region, scales = "free")
+
+```
+
+OK, now let's merge the microcystis data onto the regions. but we need to think about how to do it.
+We're trying to use microcystis from the whole time series, but it isn't exactly the same years as the residence time modeling. I think the most logical thing is to average by month and water eyar type.
+
+```{r}
+HABregions15 = st_read("HABregions15.shp") %>%
+  st_transform(crs = 4326) %>%
+  st_make_valid()
+#summarize residence time by water year type
+resave2 = group_by(resave, Region, Yr_type, Month) %>%
+  summarize(ResTime = mean(ResTime))  %>%
+  rename(RegionDSM = Region)
+
+#switch the names so they  match the other region names
+reglook = read_csv("regionlookup.csv")
+
+resave2 = left_join(resave2, reglook)
+
+#load HABs data
+load("data/HABs.RData")
+
+#Make the data frame a sf object and join it to the regions
+HABsReg = st_as_sf(filter(HABs, !is.na(Latitude)), coords = c("Longitude", "Latitude"), crs = 4326) %>%
+  st_join(HABregions15) %>%
+  mutate(Year = case_when(Source == "FMWTx" ~ 2021,
+                          TRUE ~ Year)) %>%
+  left_join(Yrs) 
+
+#join restime and HABs by region and water year type
+HABrestime = left_join(HABsReg, resave2) %>%
+  filter(!is.na(Microcystis), Source != "DOP", !is.na(Region), Month %in% c(6,7,8,9,10)) %>%
+  mutate(Mic = factor(round(Microcystis), levels = c(1,2,3,4,5), labels = c("Absent", "Low", "Med", "High", "V.High")),
+         Yr_type = factor(Yr_type, levels = c("Critical", "Dry", "Below Normal", "Above Normal", "Wet")))
+
+#boxplot of residence time by microcystis scores
+ggplot(HABrestime, aes(x =Mic, y = ResTime, color = Yr_type)) + 
+  geom_boxplot()+
+  facet_wrap(~Region)
+
+#scatterplot of microcystis scores by residence time
+ggplot(HABrestime, aes(x =ResTime, y = Microcystis, color = Yr_type)) + 
+  geom_point(position = "jitter")+
+  facet_wrap(~Region, scales = "free_x")
+
+
+```
+OK, not let's try everything together/
+
+```{r}
+
+#bar plot of frequency of microcystis by water year type and region 
+ggplot(HABrestime, aes(x =Yr_type, fill = Mic)) + 
+  geom_bar()+
+  facet_wrap(~Region)
+
+#percentage version
+ggplot(HABrestime, aes(x =Yr_type, fill = Mic)) + 
+  geom_bar(position = "fill")+
+  facet_wrap(~Region)
+
+```
+OK, we see that drier year types have more Microcystis than wetter year types. Also a lot of variation across regions, with the central and south delta having the most
+
+```{r}
+#now maybe % microcystis by water year type?
+
+
+HABRT2 = group_by(HABrestime, Yr_type, Region, Month) %>%
+  summarise(Restime = mean(ResTime), n = n(), Mic0 = length(which(Mic == "Absent"))/n, 
+            MicLow = length(which(Mic %in% c("Low", "Med")))/n, 
+            MicHigh = length(which(Mic %in% c("High", "V.High")))/n)
+
+#this is frequency of absence
+ggplot(HABRT2, aes(x = Restime, y = Mic0, color = Month, shape = Yr_type))+
+  geom_point()+ ylab("Percentage of observations where Microcytis is absent \n (by month and region)")+
+  xlab("Residence time"
+  )
+```
+
+We can see that most of the months that have 100% absence are in wet years. There aren't as many patterns with month of the year as I was expecting, but it's a bit hard to see. Also, the longest residence time months/regions have a lot of microcystis. 
+
+```{r}
+#plot absence/presence/low all together?
+HABRT3 = pivot_longer(HABRT2, cols = c(Mic0, MicLow, MicHigh), names_to = "MicLevel", values_to = "Percentage") %>%
+  mutate(MicLevel = factor(MicLevel, levels = c("Mic0", "MicLow", "MicHigh")))
+
+ggplot(HABRT3, aes(x = Restime, y = Percentage, color = Month, shape = Yr_type))+
+  geom_point()+ ylab("Percentage of observations where Microcytis is absent \n (by month and region)")+
+  xlab("Residence time"
+  )+
+  facet_wrap(~MicLevel)
+
+```
+
+OK, so maybe there is a pattern here? It's honestly really hard to tell. 
+
+```{r}
+library(ordinal)
+library(effects)
+library(MASS)
+
+#Let's try a model of HABs versus temperature, and residence time
+HABrestime = mutate(HABrestime, MicF = case_when(Microcystis ==1 ~ "Absent",
+                                                 Microcystis %in% 2:3~ "Mid",
+                                                 Microcystis %in% 4:5 ~ "High"),
+                    MicF = factor(MicF, levels = c("Absent", "Mid", "High"), ordered = T))
+
+#unfortunately, we are missing a lot of temperature  values
+HABtest = filter(HABrestime,!is.na(Temperature), !is.na(ResTime), !is.na(Station), !is.na(MicF))
+
+
+m1 = clmm(MicF ~ ResTime+ Temperature+  (1|Station)+ (1|Year), data = HABtest)
+
+summary(m1)
+
+#not as exciting as I'd think
+#Also, i need to work on how to plot this.
+
+HABtest$fits = fitted(m1)
+
+ggplot(HABtest, aes( ResTime, fits, color = MicF))+ geom_point()+ geom_smooth()+
+  ylab("Probability")+ xlab("Residence TIme")
+
+#well, that's a mess
+
+```
+
+check
+
+```{r}
+ggplot(HABsReg, aes(x = Year))+geom_bar()+
+  facet_wrap(~Region)
+```
+
+
+
+## Dry years only
+
+```{r}
+#maybe if we standardized by water year type in some way?
+#Let's try just dry and critical years
+
+dry = filter(HABtest, Yr_type %in% c("Dry", "Critical")) 
+
+m1 = clmm(MicF ~ ResTime+ Temperature+ Month+  (1|Station)+ (1|Year), data = dry)
+
+summary(m1)
+
+#not as exciting as I'd think
+#Also, i need to work on how to plot this.
+
+dry$fits = fitted(m1)
+
+ggplot(dry, aes( ResTime, fits, color = MicF))+ geom_point()+ geom_smooth(method = "lm")+
+  ylab("Probability")+ xlab("Residence TIme")
+
+
+ggplot(dry, aes(Temperature, fits, color = MicF))+ geom_point()+ geom_smooth(method = "lm")+
+  ylab("Probability")+ xlab("Temperature")
+
+ggplot(dry, aes(as.factor(Month), fits, fill = MicF))+ geom_boxplot()+
+  ylab("Probability")+ xlab("Month")
+
+
+#It's definitely better with Month in there
+
+```
+```{r}
+
+
+```
+
+
+
+what if we did a binomial model by region?
+
+```{r}
+
+micbin = group_by(dry, Region, Year) %>%
+  summarize(Present = length(Microcystis[which(Microcystis>1)]), Absent = length(Microcystis[which(Microcystis==1)]),
+            ResTime = mean(ResTime), Temperature = mean(Temperature, na.rm =T), Salinity = mean(Salinity, na.rm = T))
+
+ggplot(micbin, aes(x = ResTime, y = Present/(Present+Absent))) + geom_text(aes(label = Region, color = as.factor(Year)))+
+  ylab("Percent of summer dry year observations with Microcystis")+ xlab("residence time (days)")+
+  geom_smooth(method = "lm")+ theme_bw()
+
+micbin2 = group_by(dry, Region) %>%
+  summarize(Present = length(Microcystis[which(Microcystis>1)]), Absent = length(Microcystis[which(Microcystis==1)]),
+            ResTime = mean(ResTime), Temperature = mean(Temperature, na.rm =T), Salinity = mean(Salinity, na.rm = T))
+
+ggplot(micbin2, aes(x = ResTime, y = Present/(Present+Absent))) + geom_text(aes(label = Region))+
+  ylab("Percent of summer dry year observations with Microcystis")+ xlab("residence time (days)")+
+  geom_smooth(method = "lm")+ theme_bw()
+
+```
+I don't hate this.
+
+```{r}
+library(lme4)
+library(lmerTest)
+bn1 = glm(cbind(Present, Absent)~ Temperature + ResTime+ Salinity + Year, data = micbin, family = "binomial")
+summary(bn1)
+plot(bn1)
+
+micbin = mutate(micbin, Year2 = Year-2000, Temp = scale(Temperature), Res = scale(ResTime), Salinity = scale(Salinity))
+bn2 = glmer(cbind(Present, Absent)~ Temp + Res+ Salinity + (1|Year2), data = micbin, family = "binomial")
+bn2.1 = glmer(cbind(Present, Absent)~ Temp + log(ResTime)+ Salinity + (1|Year2) + (1|Region), data = micbin, family = "binomial")
+#bn2 = glm(cbind(Present, Absent)~ Temp + Res+ Salinity + Year2, data = micbin, family = "binomial")
+summary(bn2)
+plot(bn2)
+summary(bn2.1)
+plot(bn2.1)
+hist(residuals(bn2))
+hist(residuals(bn2.1))
+
+#OK, better!
+
+```
+```{r}
+library(effects)
+plot(allEffects(bn2))
+```
+
+```{r}
+library(DHARMa)
+res = simulateResiduals(bn2)
+plot(res)
+res2 = simulateResiduals(bn2.1)
+plot(res2)
+#Ok, that is definitely not good
+
+testOutliers(bn2)
+testResiduals(res)
+testDispersion(res)
+plotConventionalResiduals(bn2)
+plotConventionalResiduals(bn2.1)
+test = residuals(res, quantileFunction = qnorm)
+#so we are overdispersed. it's a mess.
+
+plot(density(resid(bn2, type='pearson')))
+
+scatter.smooth(predict(bn2, type='response'), resid(bn2, type='deviance'), col='gray')
+#that looks really good though. So i'm confused. 
+
+qqnorm(resid(bn2))
+qqline(resid(bn2))
+qqnorm(resid(bn2.1))
+qqline(resid(bn2.1))
+
+#log-transformed reslidence time makes no difference. Odd. 
+#why does this look so much better than the Dharma results? Still not great though. 
+```
+
+```{r}
+hist(resave2$ResTime)
+hist(log(resave2$ResTime))
+
+```
+
+
+
+
+Plot months by region
+
+```{r}
+HABsReg = filter(HABsReg, !is.na(Microcystis))
+ggplot(HABsReg, aes(x = Month, fill = as.factor(Microcystis)))+ geom_bar(position = "fill")+
+  facet_wrap(~Region)
+```
+
+```{r}
+
+bn3 = glm(cbind(Present, Absent)~ Temperature + ResTime+ Salinity, data = micbin2, family = "binomial")
+
+#bn2 = glm(cbind(Present, Absent)~ Temp + Res+ Salinity + Year2, data = micbin, family = "binomial")
+summary(bn3)
+plot(bn3)
+hist(residuals(bn3))
+
+#OK, qq plot looks better, other stuff is a mess. Super outliers. 
+
+```
+

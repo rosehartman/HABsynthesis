@@ -18,7 +18,9 @@ DF1997_2020 =  Dayflow$`Dayflow Results 1997 - 2020` %>%
 DF2021 =  Dayflow$`Dayflow Results 2021` %>%
   select(Date, OUT, EXPORTS, SJR, GCD, SAC, CVP, SWP, X2)
 
+DF2022 =  Dayflow$`Dayflow Results 2022` %>%
+  select(Date, OUT, EXPORTS, SJR, GCD, SAC, CVP, SWP, X2)
 
 #now I can put them all together!
-DF = bind_rows(DF1997_2020, DF2021)
+DF = bind_rows(DF1997_2020, DF2021, DF2022)
 save(DF, file = "Dayflow1997_2021.RData")

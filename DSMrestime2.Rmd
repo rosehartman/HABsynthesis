@@ -1,0 +1,128 @@
+---
+title: "More DSM residence time analyss"
+author: "Rosie"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+library(tidyverse)
+library(lubridate)
+library(sf)
+library(ordinal)
+```
+
+
+My models were all a bit of a mess. It's not really working very well with the residence time values. The salinity relationship makes no sense. I'm going to limit the datast to just the past five years. I may want to limit it to just the delta and kick out SUisun
+
+
+```{r}
+load("HABrestime.RData")
+
+HABres2 = HABrestime %>%
+  st_drop_geometry() %>%
+  filter(Year>2015, !is.na(Temperature), !is.na(ResTime), !is.na(Region),
+                 !is.na(Station), !is.na(Microcystis), Month %in% c(6:10)) %>%
+  mutate(MicF = case_when(Microcystis ==1 ~ "Absent",
+                                                 Microcystis %in% c(2, 2.5, 3, 3.5)~ "Mid",
+                                                 Microcystis %in% c(4, 4.5,5) ~ "High"),
+                    MicF = factor(MicF, levels = c("Absent", "Mid", "High"), ordered = T))
+  
+
+
+#boxplot of residence time by microcystis scores
+ggplot(HABres2, aes(x =Mic, y = ResTime, color = Yr_type)) + 
+  geom_boxplot()+
+  facet_wrap(~Region)
+
+#scatterplot of microcystis scores by residence time
+ggplot(HABres2, aes(x =ResTime, y = Microcystis, color = Yr_type)) + 
+  geom_point(position = "jitter")+
+  facet_wrap(~Region, scales = "free_x")
+
+
+```
+
+Now an ordered regression
+
+```{r}
+
+m1 = clmm(MicF ~ ResTime+ Temperature+ Month + (1|Station)+ (1|Year), data = HABres2)
+
+
+summary(m1)
+
+#not as exciting as I'd think
+#Also, i need to work on how to plot this.
+
+HABres2$fits = fitted(m1)
+
+ggplot(HABres2, aes( ResTime, fits, color = MicF))+ geom_point()+ geom_smooth(method = "lm")+
+  ylab("Probability")+ xlab("Residence TIme")
+
+
+ggplot(HABres2, aes(Temperature, fits, color = MicF))+ geom_point()+ geom_smooth(method = "lm")+
+  ylab("Probability")+ xlab("Temperature")
+
+ggplot(HABres2, aes(as.factor(Month), fits, fill = MicF))+ geom_boxplot()+
+  ylab("Probability")+ xlab("Month")
+
+
+```
+
+UGH. Still not great
+
+Binomial presence absence by region
+
+```{r}
+library(lme4)
+library(lmerTest)
+
+
+
+micbin = group_by(HABres2, Region, Year, Month) %>%
+  summarize(Present = length(Microcystis[which(Microcystis>1)]), Absent = length(Microcystis[which(Microcystis==1)]),
+            ResTime = mean(ResTime), Temperature = mean(Temperature, na.rm =T), Salinity = mean(Salinity, na.rm = T)) %>%
+            mutate(Year2 = Year-2000, Temp = scale(Temperature), Res = scale(ResTime), Sal = scale(Salinity))
+
+
+bn2 = glmer(cbind(Present, Absent)~ Temp + Res + Month+ Sal+(1|Year2), data = micbin, family = "binomial")
+bn2.1 = glmer(cbind(Present, Absent)~ Temp + log(ResTime) + Sal+ (1|Year2) + (1|Region), data = micbin, family = "binomial")
+#bn2 = glm(cbind(Present, Absent)~ Temp + Res+ Salinity + Year2, data = micbin, family = "binomial")
+summary(bn2)
+plot(bn2)
+summary(bn2.1)
+plot(bn2.1)
+hist(residuals(bn2))
+hist(residuals(bn2.1))
+
+#Huh. REsiduals look better but other plots look worse with the log0transformation
+library(effects)
+plot(allEffects(bn2))
+
+summary(micbin)
+
+#Residence time just really isn't a good predictor. 
+library(DHARMa)
+
+res1 = simulateResiduals(bn2.1)
+plot(res1)
+
+#OK. Log-transformed residnece time is definitely better, if not perfect
+
+```
+
+I don't think the salinity is doin gmuch for us. it's showing an increase with increasing salinity. 
+
+```{r}
+
+library(MuMIn)
+micbin = filter(micbin, !is.na(Sal))
+global = glmer(cbind(Present, Absent)~ Temp + Res + Month+ Sal+(1|Year2), data = micbin, family = "binomial", na.action = "na.fail")
+dredge(global)
+
+#the best model is just temperature and month. 
+
+```
+

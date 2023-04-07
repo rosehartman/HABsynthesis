@@ -94,6 +94,8 @@ HABrestime = left_join(HABsReg, resave2) %>%
   mutate(Mic = factor(round(Microcystis), levels = c(1,2,3,4,5), labels = c("Absent", "Low", "Med", "High", "V.High")),
          Yr_type = factor(Yr_type, levels = c("Critical", "Dry", "Below Normal", "Above Normal", "Wet")))
 
+save(HABrestime, file = "HABrestime.RData")
+
 #boxplot of residence time by microcystis scores
 ggplot(HABrestime, aes(x =Mic, y = ResTime, color = Yr_type)) + 
   geom_boxplot()+

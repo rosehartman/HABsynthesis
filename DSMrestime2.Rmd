@@ -22,7 +22,7 @@ load("HABrestime.RData")
 
 HABres2 = HABrestime %>%
   st_drop_geometry() %>%
-  filter(Year>2015, !is.na(Temperature), !is.na(ResTime), !is.na(Region),
+  filter(Year>2014, !is.na(Temperature), !is.na(ResTime), !is.na(Region),
                  !is.na(Station), !is.na(Microcystis), Month %in% c(6:10)) %>%
   mutate(MicF = case_when(Microcystis ==1 ~ "Absent",
                                                  Microcystis %in% c(2, 2.5, 3, 3.5)~ "Mid",
@@ -67,6 +67,12 @@ ggplot(HABres2, aes(Temperature, fits, color = MicF))+ geom_point()+ geom_smooth
 
 ggplot(HABres2, aes(as.factor(Month), fits, fill = MicF))+ geom_boxplot()+
   ylab("Probability")+ xlab("Month")
+
+ggplot(HABres2, aes(x = Temperature, y = Microcystis))+ geom_point()+ 
+  facet_wrap(~Region)
+
+ggplot(HABres2, aes(x = MicF, y = Temperature))+ geom_boxplot()+ 
+  facet_wrap(~Region)+ geom_hline(yintercept = 25)
 
 
 ```
@@ -123,6 +129,97 @@ global = glmer(cbind(Present, Absent)~ Temp + Res + Month+ Sal+(1|Year2), data =
 dredge(global)
 
 #the best model is just temperature and month. 
+
+global = glmer(cbind(Present, Absent)~ Temp + Res + Month+ Sal+ Region +(1|Year2), data = micbin, family = "binomial", na.action = "na.fail")
+dredge(global)
+
+#if you add region in there, salinity also pops up, but not super strong
+
+plot(allEffects(global))
+
+ggplot(micbin, aes(x = Temperature, y = Present))+ geom_point()+ geom_smooth()
+
+
+micbin2017 = filter(micbin, !is.na(Sal), Year > 2016)
+global17 = glmer(cbind(Present, Absent)~ Temp + Res+  Month+ Sal+(1|Year2), data = micbin2017, family = "binomial", na.action = "na.fail")
+dredge(global17)
+
+best17 = glmer(cbind(Present, Absent)~ Temp + Month+ Res+ (1|Year2), data = micbin2017, family = "binomial", na.action = "na.fail")
+summary(best17)
+
+```
+
+
+```{r}
+#try adding a random effect of region
+
+library(MuMIn)
+micbin = filter(micbin, !is.na(Sal))
+global = glmer(cbind(Present, Absent)~ Temp + Res+(1|Region) + Month+ Sal+(1|Year2), data = micbin, family = "binomial", na.action = "na.fail")
+dredge(global)
+```
+
+it might be more appropriate to do 2017 onwards, since that's when NCRO started
+
+```{r}
+micbin2017 = filter(micbin, !is.na(Sal), Year > 2016)
+global17 = glmer(cbind(Present, Absent)~ Temp + Res+(1|Region) + Month+ Sal+(1|Year2), data = micbin2017, family = "binomial", na.action = "na.fail")
+dredge(global17)
+
+best17 = glmer(cbind(Present, Absent)~ Temp + Region + Month+ (1|Year2), data = micbin2017, family = "binomial", na.action = "na.fail")
+summary(best17)
+
+```
+
+Look at data by region, compare physical variables.
+
+```{r}
+
+
+
+physreg = group_by(HABres2, Region, Year) %>%
+  summarize(Present = length(Microcystis[which(Microcystis>1)]), Absent = length(Microcystis[which(Microcystis==1)]), Percent = Present/(Present+Absent),
+            ResTime = mean(ResTime), Temperature = mean(Temperature, na.rm =T), Salinity = mean(Salinity, na.rm = T),
+            Secchi = mean(Secchi, na.rm =T), Depth = mean(Depth, na.rm =T)) %>%
+  group_by(Region) %>%
+  summarise(Present = mean(Present), Absent = mean(Absent), Percent =Present/(Present+Absent), ResTime = mean(ResTime), Temperature = mean(Temperature, na.rm =T), Salinity = mean(Salinity, na.rm = T), Secchi = mean(Secchi, na.rm =T), Depth = mean(Depth, na.rm =T))
+
+ggplot(physreg, aes(x = Region, y = Salinity))+ geom_col()
+
+ggplot(physreg, aes(x = Region, y = ResTime))+ geom_col()
+ggplot(physreg, aes(x = Region, y = Temperature))+ geom_col()
+ggplot(physreg, aes(x = Percent, y = Salinity))+ geom_point()+ geom_smooth()
+ggplot(physreg, aes(x = Percent, y = Temperature))+ geom_point()+ geom_smooth()
+ggplot(physreg, aes(x = Percent, y = ResTime))+ geom_point()+ geom_smooth()
+
+```
+Let's try an NMDS plot
+
+```{r}
+library(vegan)
+physreg = mutate(physreg, Depth = case_when(is.nan(Depth) ~ 8,
+                                            TRUE ~ Depth))
+regmat = as.matrix(select(physreg, Temperature, Salinity, ResTime, Depth, Secchi)) 
+
+mds1 = metaMDS(regmat, autotransform =T)
+
+plot(mds1, type = "t")
+
+data.scores <- as.data.frame(scores(mds1)$sites)  #Using the scores function from vegan to extract the site scores and convert to a 
+data.scores$Region = physreg$Region
+data.scores$Percent = physreg$Percent
+vars = as.data.frame(scores(mds1)$species)
+vars$Label = row.names(vars)
+  
+ggplot(data.scores, aes(x = NMDS1, y = NMDS2))+ geom_point(aes(size = Percent), alpha = 0.5, color = "lightskyblue")+
+  geom_text(aes(label = Region))+ 
+  geom_text(data = vars, aes(label = Label), color = "red")+
+  geom_segment(data = vars, aes(x = 0, y =0, xend = NMDS1, yend = NMDS2), 
+               arrow = arrow(length = unit(0.1,"cm")), inherit.aes = FALSE, 
+               color = "red")+
+  scale_size_continuous(range = c(1,10), name = "Percent\nof samples \nwith Microcysits\nPresent")+
+  theme_bw()
+  
 
 ```
 

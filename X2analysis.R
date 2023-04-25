@@ -338,6 +338,11 @@ X2s2 = DF %>%
 
 X2sall = bind_rows(X2s, X2s2)
 
+ggplot(X2sall, aes(x = Date, y = X2))+geom_line()
+x2017 = filter(X2sall, Year == 2017)
+
+ggplot(dplyr::filter(DF, year(Date) == 2017), aes(x = Date, y = X2))+geom_line()
+
 restime = full_join(resave, X2sall, by = c("Year", "Month")) %>%
   filter(!is.na(Region))
 

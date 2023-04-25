@@ -3,6 +3,9 @@
 library(tidyverse)
 library(readxl)
 library(lubridate)
+library(deltamapr)
+library(sf)
+library(discretewq)
 # 
 # load("data/HABsw2022.RData")
 # HABs = HABs2022
@@ -151,8 +154,67 @@ ggplot(HABrestime, aes(x = Date, y = ResTime))+ geom_point()+
   facet_grid(Region~Source)
 
 
+#average depth by region? But this is just depth where sampling occured.
+
+depths = group_by(HABrestime, Region) %>%
+  summarize(depth = mean(Depth, na.rm =T))
 ggplot(HABrestime, aes(x = Date, y = Salinity))+ geom_point()+
   facet_grid(Region~Source)
 
 save(HABrestime, file = "HABrestime.RData")
 write.csv(HABrestime, "AlltheData.csv", row.names = F)
+
+
+################################################################
+#continuyous data
+
+NCROcont = filter(HABrestime, Source == "DWR_NCRO")
+stas = unique(NCROcont$Station)
+stasregs = select(HABrestime, Station, Source, Region) %>%
+  dplyr::filter(Source == "DWR_NCRO") %>%
+  distinct()
+library(cder)
+NCROcont1 = cdec_query(stations = stas[1:10], sensors = c(25, 100), start.date = as.Date("2007-01-01"), end.date = as.Date("2022-12-31"))
+NCROcont2 = cdec_query(stations = stas[11:20], sensors = c(25, 100), start.date = as.Date("2007-01-01"), end.date = as.Date("2022-12-31"))
+NCROcont3 = cdec_query(stations = stas[21:31], sensors = c(25, 100), start.date = as.Date("2007-01-01"), end.date = as.Date("2022-12-31"))
+NCROcont = bind_rows(NCROcont1, NCROcont2, NCROcont3)
+NCROcontdaily = filter(NCROcont, Duration == "E") %>%
+                       mutate(Value = case_when(SensorNumber == 25 & Value >110 ~ NA,
+                                                SensorNumber == 25 & Value < 34 ~ NA,
+                                                SensorNumber == 100 & Value < 1 ~ NA,
+                                         TRUE ~ Value)) %>%
+  mutate(Date = date(DateTime)) %>%
+  group_by(Date, StationID, SensorNumber, SensorType, SensorUnits) %>%
+  summarize(Value = mean(Value, na.rm =T))
+
+NCROwide = pivot_wider(NCROcontdaily, id_cols = c(Date, StationID), names_from = SensorType, values_from = Value) %>%
+  mutate(Year = year(Date), Month = month(Date))
+
+NCROwide2 = left_join(NCROwide, Yrs) %>%
+  left_join(stasregs, by = c("StationID" = "Station")) %>%
+  left_join(resave2)
+write.csv(NCROwide2, "NCROcontdata.csv")
+save(NCROwide2, file = "NCROcontdata.Rdata")
+
+unique(NCROcont1$StationID)
+test = c("DRB", "GLO", "HCHM" )
+NCROother = cdec_query(stations = test,  sensors = c(25, 100), start.date = as.Date("2007-01-01"), end.date = as.Date("2022-12-31"))
+
+
+#####################################################################
+#map it
+
+EMPstas = filter(Alldata, Source == "EMP", Year == 2021, !Station %in% c("EZ2-SJR", "EZ6-SJR", "EZ6", "EZ2")) %>%
+  select(Source, Station, Latitude, Longitude) %>%
+  distinct() %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+
+ggplot()+
+  geom_sf(data =HABregions15, aes(fill = Region))+
+  geom_sf(data = WW_Delta)+
+  geom_sf(data = EMPstas)+
+  geom_sf_label(data = EMPstas, aes(label = Station)) +
+  coord_sf(ylim = c(37.6, 38.4), xlim = c(-121.2, -122.4))+
+  theme_bw()
+
+EMPtest = filter(Alldata, Source == "EMP", Year %in% c(2021, 2022))

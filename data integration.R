@@ -66,6 +66,10 @@ library(discretewq)
 
 Alldata = wq(Source = c("STN", "NCRO", "FMWT", "EMP"), Start_year = 2007, End_year = 2022)
 
+#NCRO 2022 data
+#load("data/HABsw2022.RData")
+#NCRO2022 = filter(HABs2022, Year == 2022, Source == "NCRO")
+
 
 Stock = read_excel("data/2020,2021,2022 vi data.xlsx")
 Stocksites = read_excel("data/stocktonIVIdata.xlsx") %>%
@@ -118,7 +122,7 @@ resave = group_by(res1, SimPeriod, Region, Date, Yr_type, Month, Year, Index) %>
   mutate(DOY = yday(Date))
 
 
-HABregions15 = st_read("HABregions15.shp") %>%
+HABregions15 = st_read("data/HABregions15.shp") %>%
   st_transform(crs = 4326) %>%
   st_make_valid()
 #summarize residence time by water year type
@@ -127,7 +131,7 @@ resave2 = group_by(resave, Region, Yr_type, Month) %>%
   rename(RegionDSM = Region)
 
 #switch the names so they  match the other region names
-reglook = read_csv("regionlookup.csv")
+reglook = read_csv("data/regionlookup.csv")
 
 resave2 = left_join(resave2, reglook)
 
@@ -161,9 +165,14 @@ depths = group_by(HABrestime, Region) %>%
 ggplot(HABrestime, aes(x = Date, y = Salinity))+ geom_point()+
   facet_grid(Region~Source)
 
-save(HABrestime, file = "HABrestime.RData")
-write.csv(HABrestime, "AlltheData.csv", row.names = F)
+save(HABrestime, file = "data/HABrestime.RData")
+write.csv(HABrestime, "data/AlltheData.csv", row.names = F)
 
+
+#talbe of stations and number of vi observations
+
+stationsVI = group_by(HABrestime, Station, Source, StationID) %>%
+  summarize(VIyes = length(which(!is.na(Microcystis))), VIno = length(which(is.na(Microcystis))), tot = n())
 
 ################################################################
 #continuyous data
@@ -218,3 +227,38 @@ ggplot()+
   theme_bw()
 
 EMPtest = filter(Alldata, Source == "EMP", Year %in% c(2021, 2022))
+
+
+###############################################################
+#fmwt data test
+
+library(discretewq)
+#look at the 2021 dataset that is stored in the discretewq package
+test = wq(Sources = "FMWT") %>%
+  mutate(uniqueval = paste(as.numeric(Station), Date))
+View(test)
+
+#Now look at the version that is on teh FTP site right now
+test2 = read_csv("FMWT 1967-2022 Catch Matrix_updated.csv") %>%
+  mutate(Station = as.character(StationCode), uniqueval = paste(StationCode, SampleDate))
+
+#find the ones that don't matcch
+test3 = filter(test, !uniqueval %in% test2$uniqueval)
+
+length(unique(test$uniqueval))
+
+test4 = group_by(test, uniqueval) %>%
+  summarize(N = n()) %>%
+  filter(N>1)
+
+foo = filter(test, uniqueval %in% test4$uniqueval)
+
+test5 = group_by(test2, uniqueval) %>%
+  summarize(N = n()) %>%
+  filter(N>1)
+
+write.csv(test3, "missingdata.csv")
+stationtable = table(test$Station, test$Year)
+stationtable2 = table(test2$Station, test2$Year)
+write.csv(stationtable, "stationtable.csv")
+write.csv(stationtable2, "stationtable2.csv")          

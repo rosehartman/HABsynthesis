@@ -1,0 +1,5 @@
+River,Term,Estimate,Std. Error,df,t value,Pr(>|t|),Marginal R-squared
+San Joaquin,(Intercept),4.812,0.233,269.61,20.62,0.0000,
+San Joaquin,X2,-0.014,0.003,554.96,-5.14,0.0000,0.055
+Sacramento,(Intercept),-0.302,0.097,182.79,-3.11,0.0022,
+Sacramento,X2,0.048,0.001,246.34,39.46,0.0000,0.824

@@ -48,7 +48,7 @@ regions = st_transform(regions, crs = st_crs(centerline)) %>%
 
 ggplot()+ geom_sf(data = WW_Delta)+ geom_sf(data = regions, aes(fill = Region), alpha = 0.3)+
  # geom_sf_label(data = regions, aes(label = Region))+
-  geom_sf(data = stashap, aes(color = Microcystis))+
+  geom_sf(data = stashap, aes(size = Microcystis, color = Microcystis))+
   scale_color_viridis_c(option = "B")+
   coord_sf(xlim = c(-122.2, -121.2), ylim = c(37.6, 38.6))+
   theme_bw()

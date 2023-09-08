@@ -20,12 +20,21 @@ library(sf)
 
 #read in the residence time data
 
-res1 = read_csv("data/EX_2020_locRT.csv") %>%
+res1 = read_csv("data/EX_2020_locRT_Jun27.csv") %>%
   pivot_longer(cols = -SimPeriod, names_to = "Location", values_to = "ResTime") %>%
   mutate(Date = as.Date(SimPeriod, format = "%d%b%Y"), Region = str_extract(Location, "[A-Z]+" ))
 
 
 ggplot(res1, aes(x = Location, y = ResTime)) + geom_boxplot()+facet_wrap(~Region, scales = "free")
+
+#Longer cuttoff
+
+res1.5 = read_csv("data/EX_2020_locRT.csv") %>%
+  pivot_longer(cols = -SimPeriod, names_to = "Location", values_to = "ResTime") %>%
+  mutate(Date = as.Date(SimPeriod, format = "%d%b%Y"), Region = str_extract(Location, "[A-Z]+" ))
+
+
+ggplot(res1.5, aes(x = Location, y = ResTime)) + geom_boxplot()+facet_wrap(~Region, scales = "free")
 
 
 ```
@@ -65,7 +74,7 @@ OK, now let's merge the microcystis data onto the regions. but we need to think 
 We're trying to use microcystis from the whole time series, but it isn't exactly the same years as the residence time modeling. I think the most logical thing is to average by month and water eyar type.
 
 ```{r}
-HABregions15 = st_read("HABregions15.shp") %>%
+HABregions15 = st_read("data/HABregions15.shp") %>%
   st_transform(crs = 4326) %>%
   st_make_valid()
 #summarize residence time by water year type
@@ -74,7 +83,7 @@ resave2 = group_by(resave, Region, Yr_type, Month) %>%
   rename(RegionDSM = Region)
 
 #switch the names so they  match the other region names
-reglook = read_csv("regionlookup.csv")
+reglook = read_csv("data/regionlookup.csv")
 
 resave2 = left_join(resave2, reglook)
 
@@ -94,7 +103,7 @@ HABrestime = left_join(HABsReg, resave2) %>%
   mutate(Mic = factor(round(Microcystis), levels = c(1,2,3,4,5), labels = c("Absent", "Low", "Med", "High", "V.High")),
          Yr_type = factor(Yr_type, levels = c("Critical", "Dry", "Below Normal", "Above Normal", "Wet")))
 
-save(HABrestime, file = "HABrestime.RData")
+save(HABrestime, file = "data/HABrestime.RData")
 
 #boxplot of residence time by microcystis scores
 ggplot(HABrestime, aes(x =Mic, y = ResTime, color = Yr_type)) + 
@@ -112,15 +121,25 @@ OK, not let's try everything together/
 
 ```{r}
 
+HABsrestime2017 = filter(HABrestime, Year >2016, !is.na(Mic), !is.na(Region))
+
 #bar plot of frequency of microcystis by water year type and region 
-ggplot(HABrestime, aes(x =Yr_type, fill = Mic)) + 
+ggplot(HABsrestime2017, aes(x =Yr_type, fill = Mic)) + 
   geom_bar()+
   facet_wrap(~Region)
 
 #percentage version
-ggplot(HABrestime, aes(x =Yr_type, fill = Mic)) + 
-  geom_bar(position = "fill")+
-  facet_wrap(~Region)
+ggplot(HABsrestime2017, aes(x =Yr_type, fill = Mic)) + 
+  geom_bar(position = "fill", color = "black")+
+  scale_fill_manual(values = c("grey91", "lemonchiffon","goldenrod2", "chocolate1", "firebrick"), name = "Microcystis\nVisual Index")+
+  facet_wrap(~Region)+ theme_bw()
+
+
+ggplot(HABsrestime2017, aes(x =Month, fill = Mic)) + 
+  geom_bar(position = "fill", color = "black")+
+  scale_fill_manual(values = c("grey91", "lemonchiffon","goldenrod2", "chocolate1", "firebrick"), name = "Microcystis\nVisual Index")+
+  facet_wrap(~Region)+ theme_bw()
+
 
 ```
 OK, we see that drier year types have more Microcystis than wetter year types. Also a lot of variation across regions, with the central and south delta having the most
@@ -266,7 +285,7 @@ bn1 = glm(cbind(Present, Absent)~ Temperature + ResTime+ Salinity + Year, data =
 summary(bn1)
 plot(bn1)
 
-micbin = mutate(micbin, Year2 = Year-2000, Temp = scale(Temperature), Res = scale(ResTime), Salinity = scale(Salinity))
+micbin = mutate(micbin, Year2 = Year-2000, Temp = scale(Temperature), Res = scale(ResTime), Sal = scale(Salinity))
 bn2 = glmer(cbind(Present, Absent)~ Temp + Res+ Salinity + (1|Year2), data = micbin, family = "binomial")
 bn2.1 = glmer(cbind(Present, Absent)~ Temp + log(ResTime)+ Salinity + (1|Year2) + (1|Region), data = micbin, family = "binomial")
 #bn2 = glm(cbind(Present, Absent)~ Temp + Res+ Salinity + Year2, data = micbin, family = "binomial")

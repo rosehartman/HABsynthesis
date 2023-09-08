@@ -1,0 +1,292 @@
+"","Station","Source","VIyes","VIno","tot"
+"1","305","FMWT",64,0,64
+"2","306","FMWT",64,0,64
+"3","307","FMWT",64,0,64
+"4","308","FMWT",64,0,64
+"5","309","FMWT",64,0,64
+"6","310","FMWT",64,0,64
+"7","311","FMWT",64,0,64
+"8","314","FMWT",63,1,64
+"9","315","FMWT",64,0,64
+"10","321","FMWT",63,1,64
+"11","322","FMWT",64,0,64
+"12","323","FMWT",64,0,64
+"13","323","STN",88,6,94
+"14","325","FMWT",64,0,64
+"15","326","FMWT",64,0,64
+"16","327","FMWT",64,0,64
+"17","328","FMWT",64,0,64
+"18","329","FMWT",64,0,64
+"19","334","FMWT",64,0,64
+"20","335","FMWT",63,1,64
+"21","336","FMWT",64,0,64
+"22","337","FMWT",64,0,64
+"23","338","FMWT",64,0,64
+"24","339","FMWT",64,0,64
+"25","340","FMWT",64,0,64
+"26","340","STN",90,5,95
+"27","341","FMWT",63,0,63
+"28","401","FMWT",64,0,64
+"29","403","FMWT",64,0,64
+"30","404","FMWT",64,0,64
+"31","405","FMWT",64,0,64
+"32","405","STN",89,7,96
+"33","406","FMWT",63,1,64
+"34","407","FMWT",64,0,64
+"35","408","FMWT",64,0,64
+"36","409","FMWT",64,0,64
+"37","410","FMWT",64,0,64
+"38","411","FMWT",64,0,64
+"39","411","STN",91,5,96
+"40","412","FMWT",64,0,64
+"41","413","FMWT",64,0,64
+"42","414","FMWT",64,0,64
+"43","415","FMWT",64,0,64
+"44","416","FMWT",64,0,64
+"45","417","FMWT",63,1,64
+"46","418","FMWT",64,0,64
+"47","418","STN",90,6,96
+"48","501","FMWT",64,0,64
+"49","501","STN",92,4,96
+"50","502","FMWT",64,0,64
+"51","503","FMWT",64,0,64
+"52","504","FMWT",62,2,64
+"53","504","STN",92,4,96
+"54","505","FMWT",64,0,64
+"55","507","FMWT",64,0,64
+"56","508","FMWT",64,0,64
+"57","508","STN",90,6,96
+"58","509","FMWT",64,0,64
+"59","510","FMWT",64,0,64
+"60","511","FMWT",64,0,64
+"61","512","FMWT",64,0,64
+"62","513","FMWT",63,1,64
+"63","513","STN",92,4,96
+"64","515","FMWT",63,1,64
+"65","516","FMWT",63,1,64
+"66","517","FMWT",64,0,64
+"67","518","FMWT",64,0,64
+"68","519","FMWT",64,0,64
+"69","519","STN",92,4,96
+"70","520","STN",92,4,96
+"71","601","FMWT",64,0,64
+"72","602","FMWT",64,0,64
+"73","602","STN",90,6,96
+"74","603","FMWT",64,0,64
+"75","604","FMWT",64,0,64
+"76","605","FMWT",64,0,64
+"77","606","FMWT",64,0,64
+"78","606","STN",90,6,96
+"79","608","FMWT",64,0,64
+"80","609","STN",90,6,96
+"81","610","STN",91,5,96
+"82","701","FMWT",63,1,64
+"83","703","FMWT",64,0,64
+"84","704","FMWT",64,0,64
+"85","704","STN",91,5,96
+"86","705","FMWT",64,0,64
+"87","706","FMWT",63,1,64
+"88","706","STN",91,5,96
+"89","707","FMWT",64,0,64
+"90","707","STN",90,6,96
+"91","708","FMWT",64,0,64
+"92","709","FMWT",64,0,64
+"93","710","FMWT",64,0,64
+"94","711","FMWT",63,1,64
+"95","711","STN",90,6,96
+"96","712","FMWT",62,0,62
+"97","713","FMWT",63,0,63
+"98","713","STN",72,0,72
+"99","715","FMWT",64,0,64
+"100","716","FMWT",63,1,64
+"101","716","STN",72,0,72
+"102","717","FMWT",62,0,62
+"103","719","FMWT",56,0,56
+"104","719","STN",72,0,72
+"105","721","FMWT",36,0,36
+"106","721","STN",54,0,54
+"107","722","FMWT",8,0,8
+"108","722","STN",12,0,12
+"109","723","FMWT",56,0,56
+"110","723","STN",72,0,72
+"111","724","FMWT",61,1,62
+"112","735","FMWT",61,0,61
+"113","736","FMWT",60,0,60
+"114","795","FMWT",56,0,56
+"115","795","STN",71,0,71
+"116","796","FMWT",56,0,56
+"117","796","STN",71,0,71
+"118","797","FMWT",54,1,55
+"119","797","STN",72,0,72
+"120","801","STN",91,5,96
+"121","802","FMWT",64,0,64
+"122","804","FMWT",64,0,64
+"123","804","STN",92,4,96
+"124","806","FMWT",64,0,64
+"125","807","FMWT",64,0,64
+"126","808","FMWT",62,2,64
+"127","809","FMWT",64,0,64
+"128","809","STN",92,4,96
+"129","810","FMWT",63,1,64
+"130","811","FMWT",64,0,64
+"131","812","FMWT",64,0,64
+"132","812","STN",92,4,96
+"133","813","FMWT",64,0,64
+"134","814","FMWT",64,0,64
+"135","815","FMWT",64,0,64
+"136","815","STN",91,5,96
+"137","902","FMWT",64,0,64
+"138","902","STN",92,4,96
+"139","903","FMWT",63,0,63
+"140","904","FMWT",64,0,64
+"141","905","FMWT",64,0,64
+"142","906","FMWT",64,0,64
+"143","906","STN",91,5,96
+"144","908","FMWT",64,0,64
+"145","909","FMWT",64,0,64
+"146","910","FMWT",63,1,64
+"147","910","STN",92,4,96
+"148","911","FMWT",64,0,64
+"149","912","FMWT",64,0,64
+"150","912","STN",92,4,96
+"151","913","FMWT",64,0,64
+"152","914","FMWT",64,0,64
+"153","914","STN",91,5,96
+"154","915","FMWT",63,0,63
+"155","915","STN",92,4,96
+"156","918","STN",91,5,96
+"157","919","FMWT",64,0,64
+"158","919","STN",91,5,96
+"159","920","FMWT",61,1,62
+"160","921","FMWT",61,0,61
+"161","922","FMWT",62,0,62
+"162","923","FMWT",63,0,63
+"163","Bethel Island @ Piper Slough","NCRO",4,0,4
+"164","Bethel Island near Piper Slough","NCRO",54,68,122
+"165","C10A","EMP",85,103,188
+"166","C3A","EMP",85,103,188
+"167","C9","EMP",71,0,71
+"168","Contra Costa PP Number 01","NCRO",0,146,146
+"169","D10","EMP",84,103,187
+"170","D12","EMP",85,103,188
+"171","D16","EMP",85,103,188
+"172","D19","EMP",85,103,188
+"173","D22","EMP",84,102,186
+"174","D24","EMP",8,0,8
+"175","D26","EMP",84,103,187
+"176","D28A","EMP",85,103,188
+"177","D4","EMP",84,103,187
+"178","D41","EMP",84,103,187
+"179","D41A","EMP",84,103,187
+"180","D6","EMP",84,103,187
+"181","D7","EMP",84,103,187
+"182","D8","EMP",84,103,187
+"183","DHAB001","Prop1",31,2,33
+"184","DHAB002","Prop1",32,1,33
+"185","DHAB003","Prop1",29,4,33
+"186","DHAB004","Prop1",31,2,33
+"187","DHAB005","Prop1",32,1,33
+"188","DHAB006","Prop1",32,1,33
+"189","DHAB007","Prop1",30,3,33
+"190","DHAB008","Prop1",29,4,33
+"191","DHAB009","Prop1",32,2,34
+"192","DHAB010","Prop1",31,2,33
+"193","Doughty Cut near Grantline Canal","NCRO",12,245,257
+"194","EZ2","EMP",80,103,183
+"195","EZ2-SJR","EMP",47,8,55
+"196","EZ6","EMP",84,102,186
+"197","EZ6-SJR","EMP",29,9,38
+"198","False River near Oakley","NCRO",52,159,211
+"199","Fisherman's Cut","NCRO",50,51,101
+"200","Grant Line Canal East","NCRO",66,85,151
+"201","Grant Line Canal near Clifton Court Forebay","NCRO",10,0,10
+"202","Grant Line Canal near Old River","NCRO",50,196,246
+"203","Grant Ln Can @ Tracy Rd Bdg","NCRO",12,266,278
+"204","Grantline Canal above Dam","NCRO",0,174,174
+"205","Holland Cut at Holland Marina","NCRO",51,395,446
+"206","Holland Cut near Bethel Island","NCRO",51,217,268
+"207","Little Truckee above Boca","NCRO",8,0,8
+"208","MD10A","EMP",84,103,187
+"209","Middle R @ Tracy Rd Bdg","NCRO",0,73,73
+"210","Middle River @ Union Point - P10A","NCRO",15,270,285
+"211","Middle River at Howard Road","NCRO",58,202,260
+"212","Middle River at Undine Road","NCRO",60,263,323
+"213","Middle River near Holt","NCRO",52,164,216
+"214","Middle River near Tracy Blvd","NCRO",8,0,8
+"215","Middle River near Tracy Road","NCRO",49,181,230
+"216","Miner Slough near Sacramento River","NCRO",61,37,98
+"217","Mokelumne River near Highway 12","NCRO",42,152,194
+"218","Mokelumne River near Hwy 12","NCRO",7,0,7
+"219","Mountain House Creek (SOR31)","NCRO",1,0,1
+"220","NZ002","EMP",82,103,185
+"221","NZ004","EMP",83,101,184
+"222","NZ032","EMP",83,103,186
+"223","NZ068","EMP",63,0,63
+"224","NZ325","EMP",82,101,183
+"225","NZS42","EMP",83,103,186
+"226","Old River @ Tracy Road Bridge - P12","NCRO",0,75,75
+"227","Old River Below Clifton Court Intake","NCRO",39,2,41
+"228","Old River Downstream DMC Barrier","NCRO",48,249,297
+"229","Old River Upstream of Mountain House Creek","NCRO",44,31,75
+"230","Old River above DMC Barrier","NCRO",2,264,266
+"231","Old River above Doughty Cut","NCRO",7,0,7
+"232","Old River above Mountain House Creek","NCRO",10,0,10
+"233","Old River at Bacon Island","NCRO",0,154,154
+"234","Old River at Bethany Rd Drain (SOR24)","NCRO",1,0,1
+"235","Old River at Clifton Court Intake","NCRO",10,0,10
+"236","Old River at Paradise Cut Confluence Downstream","NCRO",4,0,4
+"237","Old River at Paradise Cut Confluence Upstream","NCRO",7,0,7
+"238","Old River at Quimby Island","NCRO",53,161,214
+"239","Old River at TWA","NCRO",6,0,6
+"240","Old River at Tracy Wildlife Association","NCRO",57,199,256
+"241","Old River below DMC barrier","NCRO",9,0,9
+"242","Old River below Headwaters","NCRO",58,241,299
+"243","Old River downstream of Tracy WW outfall (SOR7)","NCRO",6,0,6
+"244","Old River near Bacon Island @ USGS Pile","NCRO",47,190,237
+"245","Old River near Bacon Island at USGS Pile","NCRO",7,0,7
+"246","Old River near Doughty Cut - ORX","NCRO",56,35,91
+"247","Old River near Frank's Tract","NCRO",41,159,200
+"248","Old River near Franks Tract","NCRO",11,0,11
+"249","Old River near Head","NCRO",7,0,7
+"250","Old River upstream of Tracy Blvd Drain (SOR16U)","NCRO",2,0,2
+"251","P8","EMP",84,103,187
+"252","Paradise Cut","NCRO",46,43,89
+"253","Paradise Cut Upstream","NCRO",25,12,37
+"254","Rock Slough @ Contra Costa WD Fish Screen","NCRO",45,139,184
+"255","Rock Slough at CCWD/Trash Rack","NCRO",3,0,3
+"256","Rock Slough at Delta Road Bridge","NCRO",47,366,413
+"257","Sacramento R Downstream of Isleton","NCRO",8,0,8
+"258","Sacramento River Downstream of Isleton","NCRO",49,39,88
+"259","San Joaquin River @ Jersey Point - D15","NCRO",0,2,2
+"260","San Joaquin River @ Mossdale Bridge - C7A","NCRO",0,2,2
+"261","San Joaquin River at Blind Point","NCRO",55,155,210
+"262","San Joaquin River at Dos Reis Park","NCRO",7,0,7
+"263","San Joaquin River at Prisoner's Point","NCRO",0,34,34
+"264","Steamboat Slough","NCRO",51,38,89
+"265","Steamboat Slough near Sacramento River","NCRO",7,0,7
+"266","Stockton1","StocktonWF",11,0,11
+"267","Stockton2","StocktonWF",11,0,11
+"268","Stockton3","StocktonWF",11,0,11
+"269","Stockton4","StocktonWF",11,0,11
+"270","Stockton5","StocktonWF",11,0,11
+"271","Sugar Cut at Golden Anchor","NCRO",9,0,9
+"272","Sugar Cut downstream of Tom Paine Slough","NCRO",43,41,84
+"273","Three Mile Slough at San Joaquin River","NCRO",45,151,196
+"274","Three Mile Slough near SJR","NCRO",7,0,7
+"275","Toe Drain at I80","NCRO",3,0,3
+"276","Toe Drain at Rd. 22","NCRO",3,0,3
+"277","Toe Drain at Screw Trap","NCRO",3,0,3
+"278","Tom Paine Slough at Paradise Ave","NCRO",1,0,1
+"279","Truckee River above TTSA","NCRO",9,0,9
+"280","Truckee River at Bridge 8","NCRO",8,0,8
+"281","Truckee River at Farad","NCRO",8,0,8
+"282","Turner Cut near Holt","NCRO",7,0,7
+"283","Turner Cut near Holt, CA","NCRO",44,103,147
+"284","Victoria Canal","NCRO",10,0,10
+"285","Victoria Canal near Byron","NCRO",46,198,244
+"286","Werner Dredger Cut at Palm Tract","NCRO",4,0,4
+"287","Werner Dredger Cut near Palm Tract","NCRO",42,196,238
+"288","West Canal Above Clifton Court Intake","NCRO",37,3,40
+"289","West Canal at Clifton Court Intake","NCRO",11,0,11
+"290","Wicklund Cut near Mouth (SOR28)","NCRO",2,0,2
+"291","Yolo Bypass near Lisbon Weir","NCRO",12,0,12

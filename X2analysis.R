@@ -8,11 +8,11 @@ library(lme4)
 library(lmerTest)
 library(effects)
 library(MuMIn)
-
-
 library(DHARMa)
-
-
+library(car)
+library(AICcmodavg)
+library(readxl)
+library(RColorBrewer)
 
 #now let's grab the microcystis data from online:
 microcystis = read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1076.1&entityid=86da4465dde063c89afb0dc256bfa619")
@@ -77,7 +77,7 @@ micro = mutate(micro, Temp = scale(field.Water.temp), X2s = scale(X2), Outs = sc
 mglobal = lmer(logBV ~ Temp + X2s + Outs+ DOY+NH4s +CVPSWPs+ NO3s + Salinitys+ (1|Year) + (1|Station),
                data = micro, na.action = "na.fail")
 
-library(car)
+
 vif(mglobal)
 #DOY and temperature has highest vif()
 
@@ -150,11 +150,180 @@ mx2 = lmer(logBV ~ Temp+X2s+(1|DOY)+ (1|Year)+ (1|Station),
            data = micro, na.action = "na.fail", REML = FALSE)
 mexp = lmer(logBV ~ Temp+CVPSWPs+(1|Year)+ (1|DOY) + (1|Station),
             data = micro, na.action = "na.fail", REML = FALSE)
-library(AICcmodavg)
+
 aictab(list(mx2, mexp, mbest))
 bictab(list(mx2, mexp, mbest))
 
 #yeah, let's go with that.
+#################################################################################
+#try again and look at more different flow parameters
+
+#calculate spring outflow
+DFspring = DF %>%
+  mutate(Month = month(Date), Year = year(Date)) %>%
+  filter(Month %in% c(2,3,4,5)) %>%
+  group_by(Year) %>%
+  summarize(OUTm = mean(OUT), INm = mean(SJR + SAC), SJRm = mean(SJR), SACm = mean(SAC)) %>%
+  mutate(OUTms = scale(OUTm), INms = scale(INm), 
+         SJRms = scale(SJRm), SACms = scale(SACm), Year = as.factor(Year))
+
+micro = mutate(micro, SACs = scale(SAC), SJRs = scale(SJR)) %>%
+  left_join(DFspring)
+mglobal3 = lmer(logBV ~ Temp +CVPSWPs+ SACs+SJRs+OUTms+ Year+(1|Station),
+                data = micro, na.action = "na.fail")
+
+dredge(mglobal3)
+vif(mglobal3)
+
+
+mglobal4 = lmer(logBV ~ Temp +CVPSWPs+ SACs+SJRs+INms + Year+(1|Station),
+                data = micro, na.action = "na.fail", REML = FALSE)
+
+mglobal4a = lmer(logBV ~ Temp +CVPSWPs+ SACs+SJRs+SACms+Year+(1|Station),
+                data = micro, na.action = "na.fail", REML = FALSE)
+
+mglobal4b = lmer(logBV ~ Temp +CVPSWPs+ SACs+SJRs+ SJRms+Year+(1|Station),
+                 data = micro, na.action = "na.fail", REML = FALSE)
+
+mods1 = dredge(mglobal4)
+mods2 = dredge(mglobal4a)
+mods3 = dredge(mglobal4b)
+
+
+mX2= lmer(logBV ~ Temp +X2+(1|Year)+ (1|Station),
+                data = micro, na.action = "na.fail")
+
+mX2a= lmer(logBV ~ Temp +X2+OUTms+  (1|Station),
+          data = micro, na.action = "na.fail")
+
+AICc(mX2)
+AICc(mX2a)
+
+#SO, spring outflow and inflow are about the same. 
+#they are really good predictors if you don't include year as a random effect.
+#san joaquin is a better predictor than Sacramento flow. Exports are also good.
+#X2 is better than all the combined flow parameters
+
+
+mglobal5 = lmer(logBV ~ Temp +X2+CVPSWPs+ SACs+SJRs+INms+(1|Station),
+                data = micro, na.action = "na.fail")
+
+dredge(mglobal5)
+vif(mglobal5)
+#yuck, can't have all those in there
+
+#let's see if there are any combos that work
+
+m1 = lmer(logBV ~ Temp +X2s+ SACs+SJRs+Year+(1|Station),
+          data = micro, na.action = "na.fail")
+m1a = lmer(logBV ~ Temp+CVPSWPs +SACs+SJRs+INms+Year+(1|Station),
+          data = micro, na.action = "na.fail")
+m2 = lmer(logBV ~ Temp +X2s+CVPSWPs+ SJRs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m3 = lmer(logBV ~ Temp +X2s+CVPSWPs+ SACs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m4 = lmer(logBV ~ Temp + SACs+SJRs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m5 = lmer(logBV ~ Temp +X2s+SJRs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m6 = lmer(logBV ~ Temp +CVPSWPs+ SACs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m7 = lmer(logBV ~ Temp +CVPSWPs+ SJRs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m8 = lmer(logBV ~ Temp +X2s+SJRs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m9 = lmer(logBV ~ Temp +X2s+SACs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m10 = lmer(logBV ~ Temp +X2s+CVPSWPs+ SACs+SJRs+(1|Station),
+           data = micro, na.action = "na.fail")
+m11 = lmer(logBV ~ Temp+CVPSWPs +X2s+ SACs+SJRs+INms+(1|Station),
+          data = micro, na.action = "na.fail")
+m12 = lmer(logBV ~ Temp+CVPSWPs +X2s+INms+(1|Station),
+           data = micro, na.action = "na.fail")
+m13 = lmer(logBV ~ Temp+X2s+ SACs+INms+(1|Station),
+           data = micro, na.action = "na.fail")
+m14 = lmer(logBV ~ Temp+X2s+ SJRs+INms+(1|Station),
+           data = micro, na.action = "na.fail")
+
+vif(m1) #no
+vif(m1a) #yes
+vif(m2) #no
+vif(m3) #no
+vif(m4) #yes - no x2
+vif(m5) #no
+vif(m6) #yes - no x2
+vif(m7)#yes - no x2
+vif(m8) # no
+vif(m9) # no
+vif(m10) #no
+vif(m11) #no
+vif(m12) #yes
+vif(m13) #maybe
+vif(m14) #no
+
+#so, here are all the moddels that are legit
+m1a = lmer(logBV ~ Temp+CVPSWPs +SACs+SJRs+INms+Year+(1|Station),
+           data = micro, na.action = "na.fail", REML = FALSE)
+m12 = lmer(logBV ~ Temp+CVPSWPs +X2s+INms+Year+(1|Station),
+           data = micro, na.action = "na.fail", REML = FALSE)
+m12a = lmer(logBV ~ Temp+CVPSWPs +X2s+SACms+Year+(1|Station),
+           data = micro, na.action = "na.fail", REML = FALSE)
+m12b = lmer(logBV ~ Temp+CVPSWPs +X2s+SJRms+Year+(1|Station),
+            data = micro, na.action = "na.fail", REML = FALSE)
+
+mglobal3 = lmer(logBV ~ Temp +CVPSWPs+ SACs+SJRs+OUTms+ (1|Station),
+                data = micro, na.action = "na.fail", REML = FALSE)
+mglobal4 = lmer(logBV ~ Temp +CVPSWPs+ SACs+SJRs+INms+(1|Station),
+                data = micro, na.action = "na.fail", REML = FALSE)
+
+
+mods1 = dredge(mglobal4, rank = "BIC")
+mods2 = dredge(mglobal4a, rank = "BIC")
+mods3 = dredge(mglobal4b, rank = "BIC")
+mods4 = dredge(m12, rank = "BIC")
+mods5 = dredge(m12a, rank = "BIC")
+mods6 = dredge(m12b, rank = "BIC")
+
+allmods = bind_rows(mods1, mods2, mods3, mods4, mods5, mods6) 
+
+write.csv(as.data.frame(allmods), file = "outputs/AllMicroModels.csv", row.names = FALSE)
+
+
+#this is what happens with year in there
+
+bestwyear = lmer(logBV ~ Temp + CVPSWPs+ SACs+ SJRs + Year + (1|Station), data = micro)
+vif(bestwyear)
+summary(bestwyear)
+plot(allEffects(bestwyear))
+#ok, there should not be an increase in microcystis with increased sac flow. That has to be an issue with colinearity
+plot(simulateResiduals(bestwyear))
+
+
+
+bestwyeart = lmer(logBV ~ Temp + CVPSWPs+ X2s + Year + (1|Station), data = micro)
+vif(bestwyeart)
+summary(bestwyeart)
+plot(allEffects(bestwyeart))
+
+
+#this is the best model
+bestmod = lmer(logBV ~ Temp+X2s+SACms+(1|Station),
+               data = micro, na.action = "na.fail")
+summary(bestmod)
+vif(bestmod)
+plot(allEffects(bestmod))
+plot(simulateResiduals(bestmod))
+
+
+#second best model was with total inflow instead of sac inflow, and i think i'll just skip that one
+bestmod2 = lmer(logBV ~ Temp+CVPSWPs+X2s+SACms+(1|Station),
+               data = micro, na.action = "na.fail")
+summary(bestmod2)
+vif(bestmod2)
+plot(allEffects(bestmod2))
+plot(simulateResiduals(bestmod2))
+#OK, now exports aren't even signficant. That's surprising
+
 ######################################################################################
 
 #what does a 3km change in x2 get you?
@@ -163,6 +332,7 @@ Tempscaled = data.frame(Temp = (c(15,17,19,21,23,25,27)-mean(micro$field.Water.t
                         TempNotScaled = c(15,17,19,21,23,25,27))
 
 CVPSWPscaled = (rep(seq(500, 10000, length.out=11), each =66)-mean(micro$CVPSWP))/sd(micro$CVPSWP)
+SACscaled = (rep(seq(9000, 70000, length.out=11), each =66)-mean(micro$SACm))/sd(micro$SACm)
 
 newdata = data.frame(DOY = 254,
                      Year = rep(c(rep(2014, 11), rep(2015, 11), rep(2016, 11), 
@@ -171,11 +341,13 @@ newdata = data.frame(DOY = 254,
                      X2s = rep(X2scaled,11),
                      X2 = rep(rep(c(60,63,66,69,72,75, 78, 81, 84, 87, 90), 6),11),
                      CVPSWPs =CVPSWPscaled,
-                     CVPSWP = rep(seq(500, 10000, length.out=11), each =66))
+                     CVPSWP = rep(seq(500, 10000, length.out=11), each =66),
+                     SACms =SACscaled,
+                     SACm = rep(seq(9000, 70000, length.out=11), each =66))
                      
 test = merge(newdata, Tempscaled)
 
-test$predictions = predict(mbest, newdata = test)
+test$predictions = predict(bestmod, newdata = test)
 
 
 newdata = mutate(test, BV = exp(predictions), lagBV = lag(BV), percent = (BV+lagBV)/lagBV)
@@ -199,52 +371,75 @@ yrtypes = data.frame(Year = c(2014:2019), yeartype = c("Critical", "Critical", "
 p = ggplot(newdata, aes(x = X2, y = BV)) + 
   geom_smooth(aes(color = as.factor(TempNotScaled)), se = FALSE)+
   scale_color_brewer(name = "Temperature", palette = "OrRd")+
-  geom_text(data = yrtypes, aes(x = 70, y = 230000, label = yeartype))+
+  #geom_text(data = yrtypes, aes(x = 70, y = 230000, label = yeartype))+
   ylab("Biovolume (um3/L)")+
   xlab("X2 (km)")+
-  facet_wrap(~Year)+
-  theme_bw()+
- # geom_vline(xintercept = 85, linetype =2)+
-  geom_rect(data = DFyear, aes(ymin = 0, ymax = 250000, xmin = MinX2, xmax = MaxX2), 
-            inherit.aes = F, alpha = 0.3)
+  facet_wrap(~SACm)+
+  theme_bw()
 
-library(grid)
-g <- ggplot_gtable(ggplot_build(p))
-stripr <- which(grepl('strip-t', g$layout$name))
-fills <- c("skyblue","tan1","skyblue",  "indianred", "indianred","gold")
-k <- 1
+p
+# 
+# library(grid)
+# 
+# g <- ggplot_gtable(ggplot_build(p))
+# stripr <- which(grepl('strip-t', g$layout$name))
+# fills <- c("skyblue","tan1","skyblue",  "indianred", "indianred","gold")
+# k <- 1
+# 
+# for (i in stripr) {
+#   j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
+#   g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+#   k <- k+1
+# }
+# grid.draw(g)
 
-for (i in stripr) {
-  j <- which(grepl('rect', g$grobs[[i]]$grobs[[1]]$childrenOrder))
-  g$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
-  k <- k+1
-}
-grid.draw(g)
 
 
-
-p2 = ggplot(newdata, aes(x = CVPSWP, y = BV)) + 
+p2 = ggplot(newdata, aes(x = SACms, y = BV)) + 
   geom_smooth(aes(color = as.factor(TempNotScaled)), se = FALSE)+
   scale_color_brewer(name = "Temperature", palette = "OrRd")+
   ylab("Biovolume (um3/L)")+
-  xlab("Project Exports (cfs)")+
-  geom_text(data = yrtypes, aes(x = 6000, y = 180000, label = yeartype))+
-  facet_wrap(~Year)+
-  theme_bw()+
-  geom_rect(data = DFyear, aes(ymin = 0, ymax = 200000, xmin = MinExp, xmax =  MaxExp), 
-            inherit.aes = F, alpha = 0.3)
+  facet_wrap(~X2)+
+  xlab("Average Spring (Feb-May)\n Sacramento River Inflow (cfs)")+
+  #geom_text(data = yrtypes, aes(x = 6000, y = 180000, label = yeartype))+
+  theme_bw()
+  #geom_rect(data = DFyear, aes(ymin = 0, ymax = 200000, xmin = MinExp, xmax =  MaxExp), 
+  #          inherit.aes = F, alpha = 0.3)
+p2
 
-g2 <- ggplot_gtable(ggplot_build(p2))
-stripr <- which(grepl('strip-t', g2$layout$name))
-fills <- c("skyblue","tan1","skyblue",  "indianred", "indianred","gold")
-k <- 1
+ggplot(newdata, aes(x = SACm, y = log(BV))) + 
+  geom_smooth(aes(color = as.factor(TempNotScaled)), se = FALSE)+
+  scale_color_brewer(name = "Temperature", palette = "OrRd")+
+  ylab("Log Biovolume (um3/L)")+
+  facet_wrap(~X2)+
+  xlab("Average Spring (Feb-May)\n Sacramento River Inflow (cfs)")+
+  #geom_text(data = yrtypes, aes(x = 6000, y = 180000, label = yeartype))+
+  theme_bw()
 
-for (i in stripr) {
-  j <- which(grepl('rect', g2$grobs[[i]]$grobs[[1]]$childrenOrder))
-  g2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
-  k <- k+1
-}
-grid.draw(g2)
+
+p3 = ggplot(newdata, aes(x = TempNotScaled, y = BV)) + 
+  geom_smooth(aes(color = as.factor(SACm)), se = FALSE)+
+  scale_color_viridis_d(name = "Outflow", option = "C")+
+  ylab("Biovolume (um3/L)")+
+  facet_wrap(~X2)+
+  xlab("Water Temperature")+
+  #geom_text(data = yrtypes, aes(x = 6000, y = 180000, label = yeartype))+
+  theme_bw()
+#geom_rect(data = DFyear, aes(ymin = 0, ymax = 200000, xmin = MinExp, xmax =  MaxExp), 
+#          inherit.aes = F, alpha = 0.3)
+p3
+
+# g2 <- ggplot_gtable(ggplot_build(p2))
+# stripr <- which(grepl('strip-t', g2$layout$name))
+# fills <- c("skyblue","tan1","skyblue",  "indianred", "indianred","gold")
+# k <- 1
+# 
+# for (i in stripr) {
+#   j <- which(grepl('rect', g2$grobs[[i]]$grobs[[1]]$childrenOrder))
+#   g2$grobs[[i]]$grobs[[1]]$children[[j]]$gp$fill <- fills[k]
+#   k <- k+1
+# }
+# grid.draw(g2)
 
 
 ggplot(filter(ungroup(newdata), CVPSWP == median(newdata$CVPSWP)), 
@@ -459,8 +654,7 @@ resave = group_by(res1, Region, Location, Month, Year) %>%
 
 
 #historic X2 from Hutton et al
-library(readxl)
-library(RColorBrewer)
+
 X2s = read_excel("data/supplemental_data_wr.1943-5452.0000617_hutton3.xlsx", skip =1)
 X2s = rename(X2s, X2 = `Sacramento River X2 Position (km from GGB)`) %>%
   mutate(Date = date(Date), Month = month(Date), Year = year(Date)) %>%

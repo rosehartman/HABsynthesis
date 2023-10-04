@@ -164,6 +164,7 @@ DFspring = DF %>%
   filter(Month %in% c(2,3,4,5)) %>%
   group_by(Year) %>%
   summarize(OUTm = mean(OUT), INm = mean(SJR + SAC), SJRm = mean(SJR), SACm = mean(SAC)) %>%
+  ungroup() %>%
   mutate(OUTms = scale(OUTm), INms = scale(INm), 
          SJRms = scale(SJRm), SACms = scale(SACm), Year = as.factor(Year))
 

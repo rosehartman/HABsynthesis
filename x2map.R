@@ -15,7 +15,7 @@ library(deltamapr)
 #add points for Sacramento, Stockton, Martinez, and the CVP and SWP pumps
 
 Points =read_excel("data/points.xlsx")
-Points = st_as_sf(Points, coords = c("Longitude", "Latitude"), crs = 4326)
+Points = st_as_sf(Points, coords = c("Longitude", "Latitude"), crs = 4326, remove =FALSe)
 load("data/stations.RData")
 stations = mutate(stations, Years = factor(years, levels = c(2, 4, 6)))
 stations$Latitude= st_coordinates(stations)[,2]

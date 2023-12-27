@@ -1,0 +1,5 @@
+,Group,Name,Variance,Std. Dev
+1,Station,(Intercept),0.638,0.799
+2,Month,(Intercept),0.006,0.079
+3,Year,(Intercept),1.243,1.115
+4,Residual,NA,3.781,1.945

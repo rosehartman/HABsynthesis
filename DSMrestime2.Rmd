@@ -54,6 +54,16 @@ ggplot(HABres2, aes(x =ResTime, y = Microcystis, color = Yr_type)) +
 
 ```
 
+```{r}
+
+#quick map
+
+
+
+```
+
+
+
 Now an ordered regression
 
 ```{r}

@@ -17,24 +17,27 @@ library(deltamapr)
 #add points for Sacramento, Stockton, Martinez, and the CVP and SWP pumps
 
 Points =read_excel("data/points.xlsx")
-Points = st_as_sf(Points, coords = c("Longitude", "Latitude"), crs = 4326, remove =FALSe)
+Points = st_as_sf(Points, coords = c("Longitude", "Latitude"), crs = 4326, remove =FALSE)
 load("data/stations.RData")
-stations = mutate(stations, Years = factor(years, levels = c(2, 4, 6)))
-stations$Latitude= st_coordinates(stations)[,2]
-stations$Longitude= st_coordinates(stations)[,1]
+stations = mutate(stations2, Years = factor(years, levels = c(2, 4, 6)))
+
 #X2 locations
 P_X2_x = dplyr::filter(P_X2, RKI/10 == round(RKI/10), RKI <101, RKI >30)
 
 #segments for X2  locations
 P_X2_x$Latitude= st_coordinates(P_X2_x)[,2]
 P_X2_x$Longitude= st_coordinates(P_X2_x)[,1]
-P_X2_x = mutate(P_X2_x, yend = Latitude+.12, Y = Latitude -.12)
+P_X2_x = mutate(P_X2_x, yend = Latitude+.10, Y = Latitude -.10)
 
-
+Suisun = st_transform(st_union(R_Suisun), crs = 4326)
+Delt = st_transform(R_Delta, crs = 4326)
 D19 = filter(stations2, Station == "FT D19")
 
 X2map = ggplot()+
-  geom_sf(data = WW_Delta, fill = "lightblue", color = "lightgrey", alpha = .5)+
+     geom_sf(data = Delt, color = "springgreen3", fill = "white", alpha = 0.1, linewidth =1)+
+  geom_sf(data =Suisun, color = "darkorange", fill = "white", alpha =0.1, linewidth =1)+  
+  geom_sf(data = WW_Delta, fill = "lightblue", color = "lightgrey")+ 
+
   geom_sf(data = filter(WW_Delta, HNAME == "SACRAMENTO RIVER"), fill = "seagreen", color = "seagreen", alpha = .5)+
   geom_sf(data = filter(WW_Delta, HNAME == "SAN JOAQUIN RIVER"), fill = "cadetblue", color = "cadetblue", alpha = .5)+
   
@@ -47,37 +50,41 @@ X2map = ggplot()+
     mapping = aes(x = Longitude, xend = Longitude,
                  y = Y, yend = yend),
     data =P_X2_x,
-    crs = 4326)+
+    crs = 4326, linewidth = 1)+
   geom_point(data = stations2, aes(x = Longitude, y = Latitude, fill =as.factor(years)),
              size =2, shape = 21)+  
   annotate("segment", xend = D19$Longitude, x =D19$Longitude-0.03, yend = D19$Latitude, y = D19$Latitude-0.03,
            linewidth = 1, arrow = arrow(length = unit(0.1, "inches"),)) +
 
-  geom_label(data =D19, 
-             aes(x = Longitude, y = Latitude,  label = "D19"),
+  geom_sf_label(data =D19, 
+             aes(label = "D19"),
              nudge_x = -0.03, nudge_y = -0.03)+
   scale_fill_brewer(palette = "YlOrRd", name = "Sampling Stations\nYears Sampled")+
-  geom_sf_text(data = P_X2_x, aes(label = RKI),fontface = "bold" )+
+  geom_sf_text(data = P_X2_x, aes(label = RKI),fontface = "bold" , nudge_x = -0.018)+
   theme_bw()+
   annotation_scale()+
   annotation_north_arrow(aes(location = "tr"))+
 
-  annotate("text", x = -122.0, y = 38.2, label = "X2 Distances", size =5)+
+  annotate("text", x = -122.0, y = 37.94, label = "X2 Distances", size =5)+
+  annotate("text", x = -122.0, y = 38.2, label = "Suisun Marsh", size =4, fontface = "bold")+
   theme_bw()+ylab("")+xlab("")+
   annotate("segment", x = -121.6, xend = -121.65, y = 38.3, yend = 38.2,
             linewidth = 2, arrow = arrow()) +
-  annotate("text", x = -121.61, y = 38.3, label = "Sacramento\nRiver Inflow", size =3, hjust =1) +
+  annotate("text", x = -121.61, y = 38.3, label = "Sacramento\nRiver Inflow", size =3, hjust =1, fontface = "bold") +
   annotate("segment", x = -121.35, xend = -121.40, y = 37.85, yend = 37.9,
            linewidth = 1, arrow = arrow(length = unit(.15, "inches"))) +
-  annotate("text", x = -121.35, y = 37.82, label = "San Joaquin\nRiver Inflow", size =3) +
-  annotate("segment", x = -122.0, xend = -122.15, y = 37.9, yend = 37.9,
+  annotate("text", x = -121.35, y = 37.82, label = "San Joaquin\nRiver Inflow", size =3, fontface = "bold") +
+  
+  annotate("text", x = -121.35, y = 38.1, label = "Legal Delta \nBoundary", size =4, fontface = "bold") +
+  annotate("segment", x = -122.0, xend = -122.15, y = 37.85, yend = 37.85,
            linewidth = 2, arrow = arrow()) +
-  annotate("text", x = -122, y = 37.88, label = "Delta Outflow", size =4) +
+  annotate("text", x = -122, y = 37.83, label = "Delta Outflow", size =4, fontface = "bold") +
   annotate("segment", x = -121.65, xend = -121.68, y = 37.80, yend = 37.75,
            linewidth = 1, arrow = arrow(length = unit(.15, "inches"))) +
-  annotate("text", x = -121.6, y = 37.83, label = "Project\nExports", size =3, hjust =1) +
+  annotate("text", x = -121.6, y = 37.83, label = "Project\nExports", size =3, hjust =1, fontface = "bold") +
  coord_sf(xlim = c(-122.2, -121.25), ylim = c(37.75, 38.3))+
   theme(legend.position = "bottom")
+
 
 
 X2map
@@ -148,7 +155,7 @@ ggplot()+
 
 stations = read_csv("data/PeggysStations.csv")
 micsum2 = microcystis %>%
-  select(-Region) %>%
+  #select(-Region) %>%
   mutate(Station = paste(DWR_Site, EMP_Site),
          Station = case_when(Station %in% c("OR D28A", "OR NA") ~ "OR",
                              TRUE ~ Station),
@@ -162,3 +169,7 @@ ggplot(micsum2, aes(x = StationName, y = log(dwr.MIC_totbvL/10000 +1), fill = Re
 ggplot(micsum2, aes(x = StationName, y = log(dwr.MIC_totbvL/10000 +1), fill = Region)) + geom_boxplot()+
   theme(axis.text.x = element_text(angle = 45, hjust =1))+
   facet_grid(Year~Region, scales = "free_x")
+
+ggplot(micsum2, aes(x = StationName, fill = Region)) + geom_bar()+
+  theme(axis.text.x = element_text(angle = 45, hjust =1))+
+  facet_wrap(~Survey_Year)

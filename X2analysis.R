@@ -13,6 +13,9 @@ library(car)
 library(AICcmodavg)
 library(readxl)
 library(RColorBrewer)
+library(deltamapr)
+library(sf)
+
 
 #now let's grab the microcystis data from online:
 microcystis = read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1076.1&entityid=86da4465dde063c89afb0dc256bfa619")
@@ -538,13 +541,11 @@ write.csv(fooSJR$varcor, "outputs/X2modelrandomSJR.csv")
 
 ############################################################################33
 #look by region
-library(deltamapr)
-library(sf)
 
 regions = R_EDSM_Regions_1617P1%>%
   st_transform(crs = 4326)
 
-microsf = st_as_sf(micro, coords = c("Lon", "Lat"), crs = 4326) %>%
+microsf = st_as_sf(micro, coords = c("Lon", "Lat"), crs = 4326, remove = F) %>%
   st_join(regions)
 
 ggplot()+
@@ -555,7 +556,7 @@ microsf = mutate(microsf, Region = case_when(Region == "West" ~ "North",
                                              TRUE ~ Region))
 
 
-stations = select(microsf, Station, Region, Survey_Year) %>%
+stations = select(st_drop_geometry(microsf), Station, Region, Survey_Year) %>%
   distinct() %>%
   group_by(Station, Region) %>%
   summarize(years = length(unique(Survey_Year))) %>%
@@ -569,7 +570,8 @@ stations2 = select(micro, Station,Survey_Year, Lat, Lon) %>%
   summarize(years = length(unique(Survey_Year)), Latitude = first(Lat), Longitude = first(Lon)) %>%
   mutate(Station = str_remove(Station, "NA "),
          Station = str_remove(Station, " NA")) %>%
-  filter(Station != "RR")
+  filter(Station != "RR") %>%
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = F)
 
 save(microsf, stations, stations2, file ="data/stations.RData")
 

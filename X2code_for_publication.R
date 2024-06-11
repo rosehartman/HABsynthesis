@@ -14,6 +14,7 @@ library(ggcorrplot)
 library(visreg)
 library(grid)
 library(gridExtra)
+library(patchwork)
 
 ##################################################################################
 
@@ -117,20 +118,28 @@ yrs = read_csv("data/yearassignments.csv") %>%
 #X2=residence time analysis
 
 #This is Figure 3
-ggplot(RTs, aes(x = X2, y = log(SACRT), color = Month2))+ geom_point()+
-  scale_color_viridis_c(name = "Month\nof year")+
+
+
+SacRTplot = ggplot(RTs, aes(x = X2, y = log(SACRT), color = Month2))+ geom_point()+
+  scale_color_viridis_c(name = "Month\nof year", guide = NULL)+
   theme_bw()+
+  annotate("text", x = 40, y = 5, label = "A", fontface = "bold", size =6)+
   geom_smooth(method = "lm")+ ylab("log-transformed Sacramento \nResidence Time (Days)")
 #OK, that's pretty good
 
-ggsave("plots/SacRTvX2.tiff", device = "tiff", width = 5, height = 4)
-
-#This is Figure 4
-ggplot(RTs, aes(x = X2, y = log(SJRT)))+ geom_point(aes(color = Month2))+
+SJRRTplot = ggplot(RTs, aes(x = X2, y = log(SJRT)))+ geom_point(aes(color = Month2))+
   scale_color_viridis_c(name = "Month\nof year")+
   geom_smooth(method = "lm")+ ylab("log-transformed San Joaquin\n Residence Time (Days)")+
-  theme_bw()
+  theme_bw()+
+  annotate("text", x = 40, y = 5.5, label = "B", fontface = "bold", size =6)
 #Much less good. 
+
+SacRTplot + SJRRTplot+ plot_layout(widths = c(3.8,4))
+  
+
+ggsave("plots/bothrestime.tiff", device = "tiff", width = 9, height = 5)
+
+#This is Figure 4
 
 ggsave("plots/SJRTvX2.tiff", device = "tiff", width = 5, height = 4)
 

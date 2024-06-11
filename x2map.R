@@ -45,7 +45,7 @@ X2map = ggplot()+
       geom_sf_text(data =  filter(Points, Type == "City"), aes(label = Label), 
                    nudge_x = 0.02, nudge_y = -0.02, fontface = "bold", size = 3, color = "grey50")+
   geom_sf_text(data =  filter(Points, Type == "POI"), aes(label = Label), 
-               nudge_x = 0.01, nudge_y = -0.01, size = 3,  color = "grey50")+
+               nudge_x = c(0.01,0), nudge_y = -0.012, size = 3,  color = "grey50")+
   geom_spatial_segment(
     mapping = aes(x = Longitude, xend = Longitude,
                  y = Y, yend = yend),
@@ -58,7 +58,7 @@ X2map = ggplot()+
 
   geom_sf_label(data =D19, 
              aes(label = "D19"),
-             nudge_x = -0.03, nudge_y = -0.03)+
+             nudge_x = -0.04, nudge_y = -0.04)+
   scale_fill_brewer(palette = "YlOrRd", name = "Sampling Stations\nYears Sampled")+
   geom_sf_text(data = P_X2_x, aes(label = RKI),fontface = "bold" , nudge_x = -0.018)+
   theme_bw()+
@@ -66,23 +66,24 @@ X2map = ggplot()+
   annotation_north_arrow(aes(location = "tr"))+
 
   annotate("text", x = -122.0, y = 37.94, label = "X2 Distances", size =5)+
-  annotate("text", x = -122.0, y = 38.2, label = "Suisun Marsh", size =4, fontface = "bold")+
+  annotate("text", x = -122.0, y = 38.2, label = "Suisun Marsh", size =3, fontface = "bold", color = "grey50")+
   theme_bw()+ylab("")+xlab("")+
   annotate("segment", x = -121.6, xend = -121.65, y = 38.3, yend = 38.2,
             linewidth = 2, arrow = arrow()) +
   annotate("text", x = -121.61, y = 38.3, label = "Sacramento\nRiver Inflow", size =3, hjust =1, fontface = "bold") +
-  annotate("segment", x = -121.35, xend = -121.40, y = 37.85, yend = 37.9,
+  annotate("segment", x = -121.35, xend = -121.36, y = 37.85, yend = 37.9,
            linewidth = 1, arrow = arrow(length = unit(.15, "inches"))) +
   annotate("text", x = -121.35, y = 37.82, label = "San Joaquin\nRiver Inflow", size =3, fontface = "bold") +
   
-  annotate("text", x = -121.35, y = 38.1, label = "Legal Delta \nBoundary", size =4, fontface = "bold") +
+  annotate("text", x = -121.32, y = 38.1, label = "Legal Delta \nBoundary", size =3, 
+           fontface = "bold", color = "grey50") +
   annotate("segment", x = -122.0, xend = -122.15, y = 37.85, yend = 37.85,
            linewidth = 2, arrow = arrow()) +
   annotate("text", x = -122, y = 37.83, label = "Delta Outflow", size =4, fontface = "bold") +
   annotate("segment", x = -121.65, xend = -121.68, y = 37.80, yend = 37.75,
            linewidth = 1, arrow = arrow(length = unit(.15, "inches"))) +
   annotate("text", x = -121.6, y = 37.83, label = "Project\nExports", size =3, hjust =1, fontface = "bold") +
- coord_sf(xlim = c(-122.2, -121.25), ylim = c(37.75, 38.3))+
+ coord_sf(xlim = c(-122.2, -121.25), ylim = c(37.75, 38.45))+
   theme(legend.position = "bottom")
 
 
